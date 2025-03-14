@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+
 import { db } from '../../models/db';
 import { Field, Label, Switch } from '@headlessui/react';
 
@@ -7,14 +8,47 @@ export const TransactionForm: React.FC = () => {
   const [formData, setFormData] = useState({
     Category: '',
     Amount: '',
-    Date: ''
+    Date: '',
+    Comment: ''
   });
 
   const [income, setIncome] = useState(false);
 
-  const { Category, Amount, Date } = formData;
+  const { Category, Amount, Date, Comment } = formData;
 
   const navigate = useNavigate();
+  const { tid } = useParams();
+  console.log(tid);
+
+  const [formLabels, setFormLabels] = useState({
+    tType: 'Expense',
+    tAction: 'Create'
+  });
+
+  const getMyDateFormat = (strdate: string) => {
+    const dateParts = strdate.split('-');
+    return Number(`${dateParts[0]}${dateParts[1]}${dateParts[2]}`);
+  };
+
+  useEffect(() => {
+    if (tid) {
+      setFormLabels({
+        tType: 'Edit',
+        tAction: 'Update'
+      });
+      db.transactions.get(+tid).then((transaction) => {
+        if (transaction) {
+          setFormData({
+            Category: transaction.category,
+            Amount: transaction.amount.toString(),
+            Date: transaction.strdate,
+            Comment: transaction.comment
+          });
+          setIncome(transaction.income);
+        }
+      });
+    }
+  }, [tid]);
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const { name, value } = e.target;
@@ -32,9 +66,32 @@ export const TransactionForm: React.FC = () => {
     }
     const category = Category;
     const amount = +Amount;
-    const myDate = Date;
-    db.transactions.add({ category, amount, myDate, income });
-    navigate('/transactions');
+    const mydate = getMyDateFormat(Date);
+    const strdate = Date;
+    const comment = '';
+
+    if (tid) {
+      db.transactions.update(+tid, {
+        category,
+        amount,
+        mydate,
+        income,
+        strdate,
+        comment
+      });
+      navigate('/transactions');
+      return;
+    } else {
+      db.transactions.add({
+        category,
+        amount,
+        mydate,
+        income,
+        strdate,
+        comment
+      });
+      navigate('/transactions');
+    }
   };
 
   return (
@@ -60,7 +117,7 @@ export const TransactionForm: React.FC = () => {
           </div>
           <div className='flex-2 w-full'>
             <h1 className='text-3xl font-bold text-gray-800 text-center'>
-              Create {income ? 'Income' : 'Expense'}
+              {formLabels.tAction} {income ? ' Income' : ' Expense'}
             </h1>
           </div>
         </div>
@@ -113,6 +170,19 @@ export const TransactionForm: React.FC = () => {
               name='Date'
               value={Date}
               onChange={handleChange}
+              className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+            />
+          </div>
+          <div>
+            <label className='block text-gray-700 font-medium mb-2'>
+              Enter Comment
+            </label>
+            <input
+              type='text'
+              name='Comment'
+              value={Comment}
+              onChange={handleChange}
+              placeholder='Enter comment'
               className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
             />
           </div>

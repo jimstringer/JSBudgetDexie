@@ -3,6 +3,7 @@ import { Home } from './pages/home/Home';
 import { Layout } from './layouts/Layout';
 import { TransactionList } from './pages/transactions/TransacttionList';
 import { TransactionForm } from './pages/transactions/TransactionForm';
+import { ImportFSJson } from './pages/settings/ImportFSJson';
 
 function App() {
   return (
@@ -11,10 +12,11 @@ function App() {
         <Route element={<Layout />}>
           <Route index element={<Home />} />
           <Route path='transactions' element={<TransactionList />} />
+          <Route path='loadjson' element={<ImportFSJson />} />
           <Route path='*' element={<NoMatch />} />
         </Route>
         <Route>
-          <Route path='transaction' element={<TransactionForm />} />
+          <Route path='transaction/:tid?' element={<TransactionForm />} />
         </Route>
       </Routes>
     </>

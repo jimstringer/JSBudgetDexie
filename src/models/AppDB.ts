@@ -10,7 +10,7 @@ export default class AppDB extends Dexie {
     super('TransactionDB');
     this.version(1).stores({
       // Define the indexes for the transactions table
-      transactions: '++id, category, amount, myDate, income'
+      transactions: '++id, category, mydate, income'
     });
     this.transactions.mapToClass(Transaction);
   }

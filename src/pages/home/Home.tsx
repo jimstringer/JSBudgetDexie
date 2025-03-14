@@ -16,6 +16,11 @@ export const Home = () => {
             Create transaction
           </button>
         </Link>
+        <Link to='/loadjson'>
+          <button className='px-8 py-4 bg-blue-600 text-white font-bold rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 transition duration-300'>
+            Load json
+          </button>
+        </Link>
       </div>
     </div>
   );

@@ -5,8 +5,10 @@ export default class Transaction extends Entity<AppDB> {
   id!: number;
   category!: string;
   amount!: number;
-  myDate!: string;
+  mydate!: number;
+  strdate!: string;
   income!: boolean;
+  comment!: string;
 }
 
 /*
@@ -14,8 +16,9 @@ interface TransactionProps {
   id: number;
   category: string;
   amount: number;
-  myDate: number;
+  mydate: number;
   income: boolean;
+  comment: string;
 }
 
 const db = new Dexie('TransactionDatabase') as Dexie & {

@@ -12,7 +12,8 @@ export const NavBar = () => {
   const navItems = [
     { name: 'Home', href: '/' },
     { name: 'Transactions', href: '/transactions' },
-    { name: 'Transaction', href: '/transaction' }
+    { name: 'Transaction', href: '/transaction' },
+    { name: 'Import JSON', href: '/loadjson' }
   ];
 
   return (
