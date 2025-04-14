@@ -3,22 +3,25 @@ import { useNavigate, useParams } from 'react-router';
 
 import { db } from '../../models/db';
 import { Field, Label, Switch } from '@headlessui/react';
+import { TransactionType } from '../../models/Category';
+import Category from '../../models/Category';
 
 export const TransactionForm: React.FC = () => {
   const [formData, setFormData] = useState({
-    Category: '',
+    Categoryid: 0,
     Amount: '',
     Date: '',
     Comment: ''
   });
 
   const [income, setIncome] = useState(false);
+  const [incomeCategories, setIncomeCategories] = useState<Category[]>([]);
+  const [expenseCategories, setExpenseCategories] = useState<Category[]>([]);
 
-  const { Category, Amount, Date, Comment } = formData;
+  const { Categoryid, Amount, Date, Comment } = formData;
 
   const navigate = useNavigate();
   const { tid } = useParams();
-  console.log(tid);
 
   const [formLabels, setFormLabels] = useState({
     tType: 'Expense',
@@ -31,25 +34,50 @@ export const TransactionForm: React.FC = () => {
   };
 
   useEffect(() => {
+    const fetchTransaction = async (tid: string | number) => {
+      const transaction = await db.transactions.get(+tid);
+
+      if (transaction !== undefined) {
+        setFormData({
+          Categoryid: transaction.categoryId,
+          Amount: transaction.amount.toString(),
+          Date: transaction.strdate,
+          Comment: transaction.comment
+        });
+        setIncome(transaction.type === TransactionType.INCOME);
+      }
+    };
+    const fetchCategories = async () => {
+      const categories = await db.categorys.toArray();
+      setIncomeCategories(
+        categories.filter(
+          (category) => category.type === TransactionType.INCOME
+        )
+      );
+      setExpenseCategories(
+        categories.filter(
+          (category) => category.type === TransactionType.EXPENSE
+        )
+      );
+    };
+    fetchCategories();
+
     if (tid) {
       setFormLabels({
         tType: 'Edit',
         tAction: 'Update'
       });
-      db.transactions.get(+tid).then((transaction) => {
-        if (transaction) {
-          setFormData({
-            Category: transaction.category,
-            Amount: transaction.amount.toString(),
-            Date: transaction.strdate,
-            Comment: transaction.comment
-          });
-          setIncome(transaction.income);
-        }
-      });
+      fetchTransaction(tid);
     }
   }, [tid]);
 
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    setFormData({
+      ...formData,
+      Categoryid: +value
+    });
+  };
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -58,24 +86,35 @@ export const TransactionForm: React.FC = () => {
     });
   };
 
+  const handleIncomeChange = (checked: boolean) => {
+    setIncome(checked);
+    if (checked) {
+      //   setSelectCategories(incomeCategories);
+    } else {
+      //   setSelectCategories(expenseCategories);
+    }
+  };
+
   const handlecreation = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    if (!Category || !Amount || !Date) {
+    if (!Categoryid || !Amount || !Date) {
       alert('Please fill out all fields.');
       return;
     }
-    const category = Category;
+    const category = Categoryid;
     const amount = +Amount;
     const mydate = getMyDateFormat(Date);
     const strdate = Date;
-    const comment = '';
-
+    const comment = Comment;
+    const type = income ? TransactionType.INCOME : TransactionType.EXPENSE;
     if (tid) {
       db.transactions.update(+tid, {
-        category,
+        categoryId: category,
         amount,
         mydate,
-        income,
+        type,
+        year: +mydate.toString().slice(0, 4),
+        yearmonth: +mydate.toString().slice(0, 6),
         strdate,
         comment
       });
@@ -83,10 +122,12 @@ export const TransactionForm: React.FC = () => {
       return;
     } else {
       db.transactions.add({
-        category,
+        categoryId: category,
         amount,
         mydate,
-        income,
+        type,
+        year: +mydate.toString().slice(0, 4),
+        yearmonth: +mydate.toString().slice(0, 6),
         strdate,
         comment
       });
@@ -123,38 +164,61 @@ export const TransactionForm: React.FC = () => {
         </div>
         <form onSubmit={handlecreation} className='space-y-6'>
           <Field>
-            <Label className='block text-gray-700 font-medium mb-2'>
+            <Label
+              className='block text-gray-700 font-medium mb-2'
+              htmlFor='income'
+            >
               Turn On To Enter Income
             </Label>
             <Switch
               name='income'
+              id='income'
               checked={income}
-              onChange={setIncome}
+              onChange={handleIncomeChange}
               className='group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition data-[checked]:bg-blue-600'
             >
               <span className='size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6' />
             </Switch>
           </Field>
           <div>
-            <label className='block text-gray-700 font-medium mb-2'>
+            <label
+              className='block text-gray-700 font-medium mb-2'
+              htmlFor='Category'
+            >
               Enter Category
             </label>
-            <input
-              type='text'
+            <select
               name='Category'
-              value={Category}
-              onChange={handleChange}
-              placeholder='Enter details'
-              className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-            />
+              id='Category'
+              value={Categoryid}
+              onChange={handleSelectChange}
+              className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+            >
+              <option value=''>Select Category</option>
+              {income
+                ? incomeCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))
+                : expenseCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+            </select>
           </div>
           <div>
-            <label className='block text-gray-700 font-medium mb-2'>
+            <label
+              className='block text-gray-700 font-medium mb-2'
+              htmlFor='Amount'
+            >
               Enter Amount ($)
             </label>
             <input
               type='number'
               name='Amount'
+              id='Amount'
               value={Amount}
               onChange={handleChange}
               placeholder='Amount'
@@ -162,24 +226,32 @@ export const TransactionForm: React.FC = () => {
             />
           </div>
           <div>
-            <label className='block text-gray-700 font-medium mb-2'>
+            <label
+              className='block text-gray-700 font-medium mb-2'
+              htmlFor='Date'
+            >
               Select Date
             </label>
             <input
               type='date'
               name='Date'
+              id='Date'
               value={Date}
               onChange={handleChange}
               className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
             />
           </div>
           <div>
-            <label className='block text-gray-700 font-medium mb-2'>
+            <label
+              className='block text-gray-700 font-medium mb-2'
+              htmlFor='Comment'
+            >
               Enter Comment
             </label>
             <input
               type='text'
               name='Comment'
+              id='Comment'
               value={Comment}
               onChange={handleChange}
               placeholder='Enter comment'

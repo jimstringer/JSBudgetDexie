@@ -11,16 +11,30 @@ export const NavBar = () => {
   // Navigation items array
   const navItems = [
     { name: 'Home', href: '/' },
-    { name: 'Transactions', href: '/transactions' },
-    { name: 'Transaction', href: '/transaction' },
-    { name: 'Import JSON', href: '/loadjson' }
+    {
+      name: 'Transactions',
+      href: '#',
+      submenu: [
+        { name: 'All', href: '/transactions' },
+        { name: 'New', href: '/transactions/new' }
+      ]
+    },
+    {
+      name: 'Settings',
+      href: '/settings',
+      submenu: [
+        { name: 'Import Firestore', href: '/settings/importfs' },
+        { name: 'Import', href: '/settings/import' },
+        { name: 'Export', href: '/settings/export' }
+      ]
+    }
   ];
 
   return (
     <nav className='@container bg-gray-200 p-0 sm:p-4 mb-1 sticky top-0 z-50'>
       <ul className='hidden @md:flex space-y-2 @md:flex-row @md:space-y-0 @md:space-x-4'>
         {navItems.map((item) => (
-          <li key={item.name}>
+          <li key={item.name} className='relative group'>
             <NavLink
               to={item.href}
               className={({ isActive }) => {
@@ -31,6 +45,24 @@ export const NavBar = () => {
             >
               {item.name}
             </NavLink>
+            {item.submenu && (
+              <ul className='absolute left-0 hidden group-hover:block bg-white shadow-lg'>
+                {item.submenu.map((subItem) => (
+                  <li key={subItem.name}>
+                    <NavLink
+                      to={subItem.href}
+                      className={({ isActive }) => {
+                        return isActive
+                          ? 'text-orange-500'
+                          : 'block px-2 text-gray-800 hover:text-blue-600';
+                      }}
+                    >
+                      {subItem.name}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            )}
           </li>
         ))}
       </ul>
@@ -55,7 +87,7 @@ export const NavBar = () => {
           className={`top-10 left-0 w-[55vw] bg-zinc-300  p-5 fixed h-dvh z-40 ease-in-out duration-300  ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
           {navItems.map((item) => (
-            <li key={item.name}>
+            <li key={item.name} className='mb-2'>
               <NavLink
                 to={item.href}
                 onClick={toggleMobileMenu}
@@ -67,6 +99,25 @@ export const NavBar = () => {
               >
                 {item.name}
               </NavLink>
+              {item.submenu && (
+                <ul className='ml-4'>
+                  {item.submenu.map((subItem) => (
+                    <li key={subItem.name}>
+                      <NavLink
+                        to={subItem.href}
+                        onClick={toggleMobileMenu}
+                        className={({ isActive }) => {
+                          return isActive
+                            ? 'text-orange-500'
+                            : 'block px-2 text-gray-800 hover:text-blue-600';
+                        }}
+                      >
+                        {subItem.name}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ul>
