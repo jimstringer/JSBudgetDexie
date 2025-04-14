@@ -17,6 +17,8 @@ Pretty much everything.
 IF WE WANT TO USE DEXIE SYNCABLE NEED TO USE UUID
 Not sure if I need syncable unless I want to run app in multiple places.
 
-Done
+So Far:
 We can import the downloaded firebase data
 Can list, create and edit transactions
+Need to add reports.
+Need to fix up the css so it's not so ugly.
