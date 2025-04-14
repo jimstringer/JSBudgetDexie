@@ -6,6 +6,8 @@ import { groupBySum } from '../../utils/GroupBySum';
 import { NumberFormater } from '../../utils/NumberFormater';
 import { DetailList } from '../../components/DetailList';
 import { TransactionType } from '../../models/Category';
+import Accordion from '../../components/Accordian';
+import { useState } from 'react';
 
 export const Home = () => {
   const currentyear = new Date().getFullYear(); // Define currentyear
@@ -15,6 +17,8 @@ export const Home = () => {
   const currentDate = new Date();
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1; // Months are zero-based in JavaScript
+  const [expenseOpen, setExpenseOpen] = useState(false);
+  const [incomeOpen, setIncomeOpen] = useState(false);
 
   const totals = useLiveQuery(
     async () => {
@@ -54,12 +58,9 @@ export const Home = () => {
       if ((a.category ?? '') > (b.category ?? '')) return 1;
       return 0;
     });
-    //console.log('Totals', totals);
-
-    //console.log('Totals:', totals);
   }
-  //console.log('Expense Total:', expenseTotal);
-  //console.log('Income Total:', incomeTotal);
+  //console.log('Totals', totals);
+
   // Render the component
 
   return (
@@ -71,11 +72,21 @@ export const Home = () => {
         <div className='font-bold text-gray-600 text-left bg-pink-300 mb-1'>
           Expense Total: {NumberFormater.format(expenseTotal / 100)}
         </div>
-        <DetailList trans={totals} type={TransactionType.EXPENSE} />
+        <Accordion
+          toggleAccordion={() => setExpenseOpen(!expenseOpen)}
+          title={'Expense Details'}
+          isOpen={expenseOpen}
+          data={<DetailList trans={totals} type={TransactionType.EXPENSE} />}
+        />
         <div className='font-bold text-gray-600 text-left bg-green-300 mt-2'>
           Income Total: {NumberFormater.format(incomeTotal / 100)}
         </div>
-        <DetailList trans={totals} type={TransactionType.INCOME} />
+        <Accordion
+          toggleAccordion={() => setIncomeOpen(!incomeOpen)}
+          title={'Income Details'}
+          isOpen={incomeOpen}
+          data={<DetailList trans={totals} type={TransactionType.INCOME} />}
+        />
       </div>
     </div>
   );
